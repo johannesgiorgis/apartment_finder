@@ -1,0 +1,20 @@
+## STEPS
+
+Goal: Wanted to build a slackbot to help me find a place in Vancouver.
+Inspired by Vic Paruchuri's post on https://www.dataquest.io/blog/apartment-finding-slackbot/
+
+Step 1 - followed guide (changed to Vancouver)
+
+Step 2 - needed to find list of places to filter my search to
+Did a google search for 'best neighborhoods vancouver'
+Went on top 2 links - vanmag + airbnb
+Used beautifulsoup from guide [https://code.tutsplus.com/tutorials/scraping-webpages-in-python-with-beautiful-soup-the-basics--cms-28211] to quickly capture all the neighbors from each site and placed them on a file
+
+Used linux command line to sort alphabetically and remove duplicates - `cat places_to_live.txt | grep -v '#' | sort -u`
+Need to get coordinates for each of these locations - used http://boundingbox.klokantech.com/
+Problem: Got coordinates in wrong order
+-> use format_places.sh to reformat the coordinates in the proper order
+
+Problem: how to get list of coordinates for Skytrain transit stations
+-> use googlemaps api with python [https://github.com/googlemaps/google-maps-services-python]
+

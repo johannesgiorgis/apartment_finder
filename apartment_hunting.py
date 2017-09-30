@@ -158,7 +158,7 @@ sc = SlackClient(settings.SLACK_TOKEN)
 for result in filtered_candidates:
     
     stations_list = ["{}: {}km".format(k, v) for k, v in result['stations'].items()]
-    stations = ";".join(stations_list)
+    stations = "; ".join(stations_list)
     #station = "{} - {} km".format(station[])
     desc = "{0} | {1} | {2} | {3} | <{4}>".format(
                                                 result["area"],

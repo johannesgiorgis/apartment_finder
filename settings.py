@@ -4,7 +4,7 @@ settings.py
 
 ## Cragislist Search
 
-CRAIGSLIST_SEARCH_LIMIT = 200
+CRAIGSLIST_SEARCH_LIMIT = 50
 CRAIGSLIST_RESULTS = 'craigslist_results.txt'
 CANDIDATE_PLACES = 'candidate_places.txt'
 

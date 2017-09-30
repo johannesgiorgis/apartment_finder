@@ -152,9 +152,8 @@ print('\nFound {} transit candidate places!'.format(len(filtered_candidates)))
 
 # Post to slack
 print('\nPosting to slack channel...')
-SLACK_TOKEN = 'xoxp-248780789472-250518579559-248914308977-8a48a6b9970481af22c08fdd35c79752'
 SLACK_CHANNEL = '#housing'
-sc = SlackClient(SLACK_TOKEN)
+sc = SlackClient(settings.SLACK_TOKEN)
 
 for result in filtered_candidates:
     

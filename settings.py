@@ -186,3 +186,10 @@ SKYTRAIN_STATIONS = {
 	"Yaletown–Roundhouse": [49.2745211, -123.1218596],
 	"YVR–Airport†": [49.1966913, -123.1815123],
 }
+
+# The token that allows us to connect to slack.
+# Should be put in private.py, or set as an environment variable.
+try:
+	from private import *
+except Exception:
+	pass

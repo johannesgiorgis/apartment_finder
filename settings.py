@@ -15,10 +15,13 @@ CANDIDATE_PLACES = 'candidate_places.txt'
 # You only need the beginning of the URL.
 CRAIGSLIST_SITE = 'vancouver'
 
+# The Craigslist section underneath housing that you want to search in.
+CRAIGSLIST_HOUSING_SECTION = 'hhh'
+
 # search filter
 CRAIGSLIST_HOUSE_FILTERS={
 	'max_price': 1500, 
-    'min_price': 300,
+    'min_price': 500,
     'laundry': [
     	'w/d in unit',
     	'laundry in bldg'
@@ -33,6 +36,10 @@ CRAIGSLIST_HOUSE_FILTERS={
     	'carport'
     	],
 }
+
+## Search type preferences
+
+
 
 # A list of neighborhoods and coordinates that you want to look for apartments in.  Any listing that has coordinates
 # attached will be checked to see which area it is in.  If there's a match, it will be annotated with the area
@@ -107,10 +114,6 @@ AREAS_OF_INTEREST = {
         [49.265176,-123.102314],
         [49.27945,-123.077157],
     ],
-    #"Vancouver": [
-    #    [49.198177,-123.22474],
-    #    [49.317294,-123.023068],
-    #],
     "West End": [
         [49.275795,-123.146696],
         [49.294429,-123.121076],
@@ -122,11 +125,17 @@ AREAS_OF_INTEREST = {
     "Yaletown": [
         [49.27197,-123.126995],
         [49.278838,-123.113979],
-    ]  
+    ],
+    "Vancouver": [
+        [49.198177,-123.22474],
+        [49.317294,-123.023068],
+    ]
 }
 
 
 ## Transit preferences
+
+MAX_TRANSIT_DIST = 2 # kilometers
 
 STATIONS_INPUT_FILE = 'skytrain_stations_list.txt'
 STATIONS_OUTPUT_FILE = 'skytrain_stations_coordinates.txt'

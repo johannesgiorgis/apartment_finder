@@ -9,6 +9,7 @@ import json
 import sys
 import math
 
+# HELPER FUNCTIONS #
 def coord_distance(lat1, lon1, lat2, lon2):
     """
     Finds the distance between two pairs of latitude and longitude.
@@ -39,10 +40,62 @@ def in_box(coords, box):
         return True
     return False
 
+
+def find_geo_info(geotag, location):
+    '''
+    find geo information
+    '''
+    min_dist = None
+    near_station = False
+    station_dist = 'N/A'
+    station_name = ''
+    area = ''
+
+    # Find area
+    area_found = False
+    for a, coords in settings.AREAS_OF_INTEREST.items():
+        if in_box(geotag, coords):
+            area = a
+            area_found = True
+            break
+
+    # Get proximity to transit
+    for station, coords in settings.SKYTRAIN_STATIONS.items():
+        dist = coord_distance(coords[0], coords[1], geotag[0], geotag[1])
+        dist = float('{:.2f}'.format(dist))
+        
+        if (min_dist is None or dist < min_dist):
+            #print("Min dist '{}' -> '{}': '{}'".format(candidate['id'], station, dist))
+            min_dist = dist
+            station_name = station
+            station_dist = dist
+
+            if dist < settings.MAX_TRANSIT_DIST:
+                near_station = True
+
+    # Search area against neighborhoods of interest
+    if area == '':
+        for hood in settings.AREAS_OF_INTEREST.keys():
+            if hood.lower() in location.lower():
+                area = hood
+                break
+
+    result = {
+        "area_found": area_found,
+        "area": area,
+        "near_station": near_station,
+        "station_dist": station_dist,
+        "station_name": station_name
+    }
+
+    return result
+
+
+# BEGIN PROGRAM #
 # Search Craigslist Housing
 cl = CraigslistHousing(
     site=settings.CRAIGSLIST_SITE,
-    category='hhh',
+    category=settings.CRAIGSLIST_HOUSING_SECTION,
     filters=settings.CRAIGSLIST_HOUSE_FILTERS
 )
 
@@ -63,47 +116,30 @@ fo.close()
 
 print('Found {} places!'.format(len(places)))
 
-
-# Filter places by geography
-print('\nFiltering places by geography...')
+# Filter results
+print('\nGetting geographical information...')
 candidates = []
 for place in places:
     #pprint(place)
 
-    # filter by geolocation
-    #print('Filtering by geolocation...')
     geotag = place['geotag']
+    location = place['where']
+
+    # Skip places which include no location information
+    if location is None:
+        continue
+
     if geotag:
-        area_found = False
-        area = ''
-        areas = []
-        for area, coords in settings.AREAS_OF_INTEREST.items():
-            if in_box(geotag, coords):
-                areas.append(area)
-                area_found = True
-                #print(geotag,'vs', coords, area)
-
-        if areas:
-            place['area'] = areas
-            if place not in candidates:
-                candidates.append(place)
+        geo_info = find_geo_info(geotag, location)
+        place.update(geo_info)
     
-    # no geotag included
     else:
-        # filter by location
-        #print('Filtering by location...')
-        location = place['where']
-        if location:
-            areas = []
-            for area in list(settings.AREAS_OF_INTEREST.keys()):
-                if area in location.lower():
-                    areas.append(area)
+        place['area'] = ''
+        place['station_name'] = ''
 
-            if areas:
-                place['area'] = areas
-                if place not in candidates:
-                    candidates.append(place)
-
+    print('Area:', place['area'])
+    if len(place['station_name']) > 0 or len(place['area']) > 0:
+        candidates.append(place)
 
 # Observe candidate places
 print('\nFound {} candidate places!'.format(len(candidates)))
@@ -113,63 +149,24 @@ for candidate in candidates:
     fo.write(output)
 fo.close()
 
-#sys.exit(1)
-# Filter places by proximity to transit
-print('\nFiltering places by proximity to transit...')
-
-near_sky = False
-sky_dist = 'N/A'
-sky = ''
-max_transit_dist = 2
-
-filtered_candidates = []
-for candidate in candidates:
-    min_dist = None
-    geotag = candidate['geotag']
-    stations = {}
-    
-    for station, coords in settings.SKYTRAIN_STATIONS.items():
-        dist = coord_distance(coords[0], coords[1], geotag[0], geotag[1])
-        
-        if (min_dist is None or dist < min_dist) and dist < max_transit_dist:
-            print("Min dist '{}' -> '{}': '{}'".format(candidate['id'], station, dist))
-            min_dist = dist
-            sky = station
-
-            stations[station] = min_dist
-    
-    if stations:
-        #print('id', candidate['id'], 'Stations:', stations)
-        candidate['stations'] = stations
-        filtered_candidates.append(candidate)
-
-
-# Observe filtered candidate places
-print('\nFound {} transit candidate places!'.format(len(filtered_candidates)))
-#for candidate in filtered_candidates:
-#    pprint(candidate)
-
-
+sys.exit(1)
 # Post to slack
 print('\nPosting to slack channel...')
-SLACK_CHANNEL = '#housing'
 sc = SlackClient(settings.SLACK_TOKEN)
 
-for result in filtered_candidates:
+for result in candidates:
     
-    stations_list = ["{}: {}km".format(k, v) for k, v in result['stations'].items()]
-    stations = "; ".join(stations_list)
-    #station = "{} - {} km".format(station[])
-    desc = "{0} | {1} | {2} | {3} | <{4}>".format(
+    desc = "{0} | {1} | {2} ({3} km)| {4} | <{5}>".format(
                                                 result["area"],
                                                 result["price"], 
-                                                stations,
+                                                result["station_name"],
+                                                result["station_dist"],
                                                 result["name"], 
                                                 result["url"]
                                             )
 
     sc.api_call(
-        "chat.postMessage", channel=SLACK_CHANNEL, text=desc,
+        "chat.postMessage", channel=settings.SLACK_CHANNEL, text=desc,
         username='pybot', icon_emoji=':robot_face:'
     )
 

@@ -272,6 +272,13 @@ def scrape_craigslist_housing():
             if result['where'] is None:
                 continue
 
+            # Filter by name
+            # name contains 'female, homestay, week' - skip
+            words_to_avoid = ('female', 'homestay', 'week')
+            if any(avoid_word in result['name'].lower() for avoid_word in words_to_avoid):
+                print('skipping by name...', result['id'])
+                continue
+
             lat = 0
             lon = 0
 
@@ -318,8 +325,8 @@ def scrape_craigslist_housing():
             session.add(listing)
             session.commit()
 
-            #pprint(result)
-            if len(result['station_name']) > 0 or len(result['area']) > 0:
+            # ensure only places with areas and train stations are saved
+            if len(result['station_name']) > 0 and len(result['area']) > 0:
                 #pprint(result)
                 results.append(result)
 
@@ -387,7 +394,7 @@ def main_program():
     display_list(candidates)
 
     # Post to Slack
-    #post_to_slack(sc, candidates)
+    post_to_slack(sc, candidates)
 
 
 if __name__ == '__main__':
